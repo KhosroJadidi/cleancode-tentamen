@@ -28,7 +28,6 @@ namespace MovieLibrary.Controllers
             List<string> res = new List<string>();
             var r = client.GetAsync("https://ithstenta2020.s3.eu-north-1.amazonaws.com/topp100.json").Result;
             var ml = JsonSerializer.Deserialize<List<Movie>>(new StreamReader(r.Content.ReadAsStream()).ReadToEnd());
-            //Sort ml
             if (asc)
             {
                 ml.OrderBy(e => e.rated);
@@ -40,7 +39,6 @@ namespace MovieLibrary.Controllers
             foreach (var m in ml) {
                 res.Add(m.title);
             }
-            //result.Add(new StreamReader(response.Content.ReadAsStream()).ReadToEnd());
             return res;
         }
         
@@ -52,7 +50,7 @@ namespace MovieLibrary.Controllers
             foreach (var m in ml) {
                 if (m.id.Equals((id)))
                 {
-                    return m; //Found it!
+                    return m; 
                 }
             }
             return null;
