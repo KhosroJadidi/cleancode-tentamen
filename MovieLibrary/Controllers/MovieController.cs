@@ -88,7 +88,7 @@ namespace MovieLibrary.Controllers
             var convertedMovies = ConvertMovieRatingsToFloat(rawMovies);
             return convertedMovies;
         }
-        private static List<MovieWithNumericRating> OrderMovies(bool orderByDescending, List<MovieWithNumericRating> movies)
+        public  List<MovieWithNumericRating> OrderMovies(bool orderByDescending, List<MovieWithNumericRating> movies)
         {
             if (!orderByDescending)
             {
