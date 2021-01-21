@@ -5,15 +5,10 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using MovieLibrary.Models;
 
 namespace MovieLibrary.Controllers
 {
-    public class Movie
-    {
-        public string id { get; set; }
-        public string title { get; set; }
-        public string rated { get; set; }
-    }
 
     [ApiController]
     [Route("[controller]")]
@@ -30,14 +25,14 @@ namespace MovieLibrary.Controllers
             var ml = JsonSerializer.Deserialize<List<Movie>>(new StreamReader(r.Content.ReadAsStream()).ReadToEnd());
             if (asc)
             {
-                ml.OrderBy(e => e.rated);
+                ml.OrderBy(e => e.Rated);
             }
             else
             {
-                ml.OrderByDescending(e => e.rated);
+                ml.OrderByDescending(e => e.Rated);
             }
             foreach (var m in ml) {
-                res.Add(m.title);
+                res.Add(m.Title);
             }
             return res;
         }
@@ -48,7 +43,7 @@ namespace MovieLibrary.Controllers
             var r = client.GetAsync("https://ithstenta2020.s3.eu-north-1.amazonaws.com/topp100.json").Result;
             var ml = JsonSerializer.Deserialize<List<Movie>>(new StreamReader(r.Content.ReadAsStream()).ReadToEnd());
             foreach (var m in ml) {
-                if (m.id.Equals((id)))
+                if (m.Id.Equals((id)))
                 {
                     return m; 
                 }
