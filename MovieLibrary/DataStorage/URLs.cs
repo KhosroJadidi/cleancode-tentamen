@@ -10,5 +10,8 @@ namespace MovieLibrary.DataStorage
     {
         public static string Top100 { get; } =
             "https://ithstenta2020.s3.eu-north-1.amazonaws.com/topp100.json";
+
+        public static string DetailedMovies { get; } =
+            "https://ithstenta2020.s3.eu-north-1.amazonaws.com/detailedMovies.json";
     }
 }
