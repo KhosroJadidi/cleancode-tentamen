@@ -1,5 +1,18 @@
 ## Khosro Jadidi
 
+## OBS:
+SWAGER har slutat fungera här, vänligen använd dig av Postman:
+
+Toplist:
+
+https://localhost:44353/toplist?orderByDescending=true
+
+movie:
+
+https://localhost:44353/movie?id=tt0111161
+
+(tt0111161 är en movie id som du kan testa,The Shawshank Redemption)
+
 ## Mina Reflektioner
 - Vad du valt att testa och varför?
     sorterings logiken, eftersom det spelar huvudrollen i appen.
