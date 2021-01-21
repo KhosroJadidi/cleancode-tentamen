@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using MovieLibrary.DataStorage;
 using MovieLibrary.Models;
 
 namespace MovieLibrary.Controllers
@@ -14,7 +15,7 @@ namespace MovieLibrary.Controllers
     [Route("[controller]")]
     public class MovieController
     {
-        private readonly HttpClient client;
+        private readonly HttpClient client;        
 
         public MovieController()
         {
@@ -25,35 +26,48 @@ namespace MovieLibrary.Controllers
         [Route("/toplist")]
         public IEnumerable<string> Toplist(bool asc = true)
         {
-            List<string> res = new List<string>();
-            var r = client.GetAsync("https://ithstenta2020.s3.eu-north-1.amazonaws.com/topp100.json").Result;
-            var ml = JsonSerializer.Deserialize<List<Movie>>(new StreamReader(r.Content.ReadAsStream()).ReadToEnd());
+            var listOfMovieTitles = new List<string>();
+            var movies = GetMovies();
+
             if (asc)
             {
-                ml.OrderBy(e => e.Rated);
+                movies.OrderBy(e => e.Rated);
             }
             else
             {
-                ml.OrderByDescending(e => e.Rated);
+                movies.OrderByDescending(e => e.Rated);
             }
-            foreach (var m in ml) {
-                res.Add(m.Title);
+            foreach (var movie in movies) {
+                listOfMovieTitles.Add(movie.Title);
             }
-            return res;
+            return listOfMovieTitles;
         }
         
         [HttpGet]
         [Route("/movie")]
-        public Movie GetMovieById(string id) {
-            var r = client.GetAsync("https://ithstenta2020.s3.eu-north-1.amazonaws.com/topp100.json").Result;
-            var ml = JsonSerializer.Deserialize<List<Movie>>(new StreamReader(r.Content.ReadAsStream()).ReadToEnd());
-            foreach (var m in ml) {
-                if (m.Id.Equals((id)))
+        public Movie GetMovieById(string id) 
+        {
+            var movies = GetMovies();
+            foreach (var movie in movies) {
+                if (movie.Id.Equals((id)))
                 {
-                    return m; 
+                    return movie; 
                 }
             }
             return null;
         }
+
+        #region Helper Methods
+        private List<Movie> GetMovies() 
+        {
+            var url = URLs.Top100;
+            var responseMessage = client.GetAsync(url).Result;
+            var stream = responseMessage.Content.ReadAsStream();
+            var streamReader = new StreamReader(stream);
+            var listOfMovies = JsonSerializer.Deserialize<List<Movie>>
+                (streamReader.ReadToEnd());
+            return listOfMovies;
+        }
+        #endregion
     }
 }
