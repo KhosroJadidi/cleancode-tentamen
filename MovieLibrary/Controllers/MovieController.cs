@@ -1,61 +1,125 @@
+using Microsoft.AspNetCore.Mvc;
+using MovieLibrary.DataStorage;
+using MovieLibrary.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
-using Microsoft.AspNetCore.Mvc;
 
 namespace MovieLibrary.Controllers
 {
-    public class Movie
-    {
-        public string id { get; set; }
-        public string title { get; set; }
-        public string rated { get; set; }
-    }
-
     [ApiController]
     [Route("[controller]")]
     public class MovieController
     {
-        static HttpClient client = new HttpClient();
+        private readonly HttpClient client;
+
+        public MovieController()
+        {
+            client = new HttpClient();
+        }
 
         [HttpGet]
         [Route("/toplist")]
-        public IEnumerable<string> Toplist(bool asc = true)
+        public IEnumerable<string> Toplist(bool orderByDescending = true)
         {
-            List<string> res = new List<string>();
-            var r = client.GetAsync("https://ithstenta2020.s3.eu-north-1.amazonaws.com/topp100.json").Result;
-            var ml = JsonSerializer.Deserialize<List<Movie>>(new StreamReader(r.Content.ReadAsStream()).ReadToEnd());
-            //Sort ml
-            if (asc)
+            var movies = GetMovies(URLs.Top100);
+            //Changed the default ordering to DESCENDING, since the endpoint is called "TOP LIST", and a descending order is more logical for this name.
+            movies = OrderMovies(orderByDescending, movies);
+            var listOfMovieTitles = GetListOfMovieTitles(movies);
+            if (listOfMovieTitles.Count == 0)
+                return new List<string> { "Got an empty list, something is wrong" };
+            return listOfMovieTitles;
+        }
+
+        [HttpGet]
+        [Route("/movie")]
+        public MovieWithNumericRating GetMovieById(string id)
+        {
+            var movies = GetMovies(URLs.Top100);
+
+            try
             {
-                ml.OrderBy(e => e.rated);
+                return movies.SingleOrDefault(movie => movie.Id == id);
+            }
+            catch (Exception)
+            {
+                return new MovieWithNumericRating
+                {
+                    Id = "No such Movie",
+                    Rated = 99999999999,
+                    Title = "No such Movie"
+                };
+            }
+        }
+
+        #region Helper Methods
+
+        private List<Movie> GetMoviesUnmodified(string url)
+        {
+            var responseMessage = client.GetAsync(url).Result;
+            var stream = responseMessage.Content.ReadAsStream();
+            var streamReader = new StreamReader(stream);
+            var listOfMovies = JsonSerializer.Deserialize<List<Movie>>
+                (streamReader.ReadToEnd());
+
+            return listOfMovies;
+        }
+
+        private List<MovieWithNumericRating> ConvertMovieRatingsToFloat(List<Movie> movies)
+        {
+            var convertedMovies = new List<MovieWithNumericRating>();
+            foreach (var movie in movies)
+            {
+                var ratingAsFloat = float.Parse(movie.Rated);
+                var movieWithNumericRating =
+                    new MovieWithNumericRating
+                    {
+                        Id = movie.Id,
+                        Rated = ratingAsFloat,
+                        Title = movie.Title
+                    };
+                convertedMovies.Add(movieWithNumericRating);
+            }
+            return convertedMovies;
+        }
+
+        //Visitor pattern!
+        private List<MovieWithNumericRating> GetMovies(string url)
+        {
+            var rawMovies = GetMoviesUnmodified(url);
+            var convertedMovies = ConvertMovieRatingsToFloat(rawMovies);
+            return convertedMovies;
+        }
+
+        public List<MovieWithNumericRating> OrderMovies(bool orderByDescending, List<MovieWithNumericRating> movies)
+        {
+            if (!orderByDescending)
+            {
+                movies = movies.OrderBy(e => e.Rated)
+                    .ToList();
             }
             else
             {
-                ml.OrderByDescending(e => e.rated);
+                movies = movies.OrderByDescending(e => e.Rated)
+                    .ToList();
             }
-            foreach (var m in ml) {
-                res.Add(m.title);
-            }
-            //result.Add(new StreamReader(response.Content.ReadAsStream()).ReadToEnd());
-            return res;
+
+            return movies;
         }
-        
-        [HttpGet]
-        [Route("/movie")]
-        public Movie GetMovieById(string id) {
-            var r = client.GetAsync("https://ithstenta2020.s3.eu-north-1.amazonaws.com/topp100.json").Result;
-            var ml = JsonSerializer.Deserialize<List<Movie>>(new StreamReader(r.Content.ReadAsStream()).ReadToEnd());
-            foreach (var m in ml) {
-                if (m.id.Equals((id)))
-                {
-                    return m; //Found it!
-                }
+
+        private List<string> GetListOfMovieTitles(List<MovieWithNumericRating> movies)
+        {
+            var listOfMovieTitles = new List<string>();
+            foreach (var movie in movies)
+            {
+                listOfMovieTitles.Add(movie.Title);
             }
-            return null;
+            return listOfMovieTitles;
         }
+
+        #endregion Helper Methods
     }
 }
