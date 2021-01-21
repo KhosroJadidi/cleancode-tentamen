@@ -26,36 +26,17 @@ namespace MovieLibrary.Controllers
         [Route("/toplist")]
         public IEnumerable<string> Toplist(bool orderByDescending = true)
         {
-            var listOfMovieTitles = new List<string>();
             var movies = GetMovies(URLs.Top100);
-
             //Changed the default ordering to DESCENDING, since the endpoint is called "TOP LIST", and a descending order is more logical for this name.
-            if (!orderByDescending)
-            {
-                movies = movies.OrderBy(e => e.Rated)
-                    .ToList();
-            }
-            else
-            {
-                movies = movies.OrderByDescending(e => e.Rated)
-                    .ToList();
-            }
-
-
-
-
-
-
-
-            foreach (var movie in movies) 
-            {
-                listOfMovieTitles.Add(movie.Title+$"    {movie.Rated}");
-            }
-
-
+            movies = OrderMovies(orderByDescending, movies);
+            var listOfMovieTitles = GetListOfMovieTitles(movies);            
             return listOfMovieTitles;
         }
+
         
+
+
+
         //[HttpGet]
         //[Route("/movie")]
         //public Movie GetMovieById(string id) 
@@ -106,6 +87,30 @@ namespace MovieLibrary.Controllers
             var rawMovies = GetMoviesUnmodified(url);
             var convertedMovies = ConvertMovieRatingsToFloat(rawMovies);
             return convertedMovies;
+        }
+        private static List<MovieWithNumericRating> OrderMovies(bool orderByDescending, List<MovieWithNumericRating> movies)
+        {
+            if (!orderByDescending)
+            {
+                movies = movies.OrderBy(e => e.Rated)
+                    .ToList();
+            }
+            else
+            {
+                movies = movies.OrderByDescending(e => e.Rated)
+                    .ToList();
+            }
+
+            return movies;
+        }
+        private List<string> GetListOfMovieTitles(List<MovieWithNumericRating> movies)
+        {
+            var listOfMovieTitles = new List<string>();
+            foreach (var movie in movies)
+            {
+                listOfMovieTitles.Add(movie.Title);
+            }
+            return listOfMovieTitles;
         }
         #endregion
     }
