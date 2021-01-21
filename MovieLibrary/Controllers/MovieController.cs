@@ -120,6 +120,11 @@ namespace MovieLibrary.Controllers
             return listOfMovieTitles;
         }
 
+        private List<DetailedMovie> GetDetailedMovies(string url)
+        {
+            
+        }
+
         #endregion Helper Methods
     }
 }
