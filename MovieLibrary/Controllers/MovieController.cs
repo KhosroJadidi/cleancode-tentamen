@@ -27,7 +27,7 @@ namespace MovieLibrary.Controllers
         public IEnumerable<string> Toplist(bool asc = true)
         {
             var listOfMovieTitles = new List<string>();
-            var movies = GetMovies();
+            var movies = GetMovies(URLs.Top100);
 
             if (asc)
             {
@@ -43,30 +43,55 @@ namespace MovieLibrary.Controllers
             return listOfMovieTitles;
         }
         
-        [HttpGet]
-        [Route("/movie")]
-        public Movie GetMovieById(string id) 
-        {
-            var movies = GetMovies();
-            foreach (var movie in movies) {
-                if (movie.Id.Equals((id)))
-                {
-                    return movie; 
-                }
-            }
-            return null;
-        }
+        //[HttpGet]
+        //[Route("/movie")]
+        //public Movie GetMovieById(string id) 
+        //{
+        //    var movies = GetMovies();
+        //    foreach (var movie in movies) {
+        //        if (movie.Id.Equals((id)))
+        //        {
+        //            return movie; 
+        //        }
+        //    }
+        //    return null;
+        //}
 
         #region Helper Methods
-        private List<Movie> GetMovies() 
+        private List<Movie> GetMoviesUnmodified(string url) 
         {
-            var url = URLs.Top100;
             var responseMessage = client.GetAsync(url).Result;
             var stream = responseMessage.Content.ReadAsStream();
             var streamReader = new StreamReader(stream);
             var listOfMovies = JsonSerializer.Deserialize<List<Movie>>
                 (streamReader.ReadToEnd());
+            
             return listOfMovies;
+        }
+
+        private List<MovieWithNumericRating> ConvertMovieRatingsToFloat(List<Movie> movies)
+        {
+            var convertedMovies = new List<MovieWithNumericRating>();
+            foreach (var movie in movies)
+            {
+                var ratingAsFloat = float.Parse(movie.Rated);
+                var movieWithNumericRating =
+                    new MovieWithNumericRating
+                    {
+                        Id = movie.Id,
+                        Rated = ratingAsFloat,
+                        Title = movie.Title
+                    };
+                convertedMovies.Add(movieWithNumericRating);
+            }
+            return convertedMovies;
+        }
+
+        private List<MovieWithNumericRating> GetMovies(string url)
+        {
+            var rawMovies = GetMoviesUnmodified(url);
+            var convertedMovies = ConvertMovieRatingsToFloat(rawMovies);
+            return convertedMovies;
         }
         #endregion
     }
