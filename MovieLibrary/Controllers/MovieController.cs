@@ -24,22 +24,35 @@ namespace MovieLibrary.Controllers
 
         [HttpGet]
         [Route("/toplist")]
-        public IEnumerable<string> Toplist(bool asc = true)
+        public IEnumerable<string> Toplist(bool orderByDescending = true)
         {
             var listOfMovieTitles = new List<string>();
             var movies = GetMovies(URLs.Top100);
 
-            if (asc)
+            //Changed the default ordering to DESCENDING, since the endpoint is called "TOP LIST", and a descending order is more logical for this name.
+            if (!orderByDescending)
             {
-                movies.OrderBy(e => e.Rated);
+                movies = movies.OrderBy(e => e.Rated)
+                    .ToList();
             }
             else
             {
-                movies.OrderByDescending(e => e.Rated);
+                movies = movies.OrderByDescending(e => e.Rated)
+                    .ToList();
             }
-            foreach (var movie in movies) {
-                listOfMovieTitles.Add(movie.Title);
+
+
+
+
+
+
+
+            foreach (var movie in movies) 
+            {
+                listOfMovieTitles.Add(movie.Title+$"    {movie.Rated}");
             }
+
+
             return listOfMovieTitles;
         }
         
@@ -87,6 +100,7 @@ namespace MovieLibrary.Controllers
             return convertedMovies;
         }
 
+        //Visitor pattern!
         private List<MovieWithNumericRating> GetMovies(string url)
         {
             var rawMovies = GetMoviesUnmodified(url);
