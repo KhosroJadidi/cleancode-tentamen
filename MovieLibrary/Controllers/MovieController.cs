@@ -14,7 +14,12 @@ namespace MovieLibrary.Controllers
     [Route("[controller]")]
     public class MovieController
     {
-        static HttpClient client = new HttpClient();
+        private readonly HttpClient client;
+
+        public MovieController()
+        {
+            client = new HttpClient();
+        }
 
         [HttpGet]
         [Route("/toplist")]
