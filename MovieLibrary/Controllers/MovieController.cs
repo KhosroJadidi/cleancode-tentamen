@@ -1,21 +1,20 @@
+using Microsoft.AspNetCore.Mvc;
+using MovieLibrary.DataStorage;
+using MovieLibrary.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
-using Microsoft.AspNetCore.Mvc;
-using MovieLibrary.DataStorage;
-using MovieLibrary.Models;
 
 namespace MovieLibrary.Controllers
 {
-
     [ApiController]
     [Route("[controller]")]
     public class MovieController
     {
-        private readonly HttpClient client;        
+        private readonly HttpClient client;
 
         public MovieController()
         {
@@ -29,7 +28,9 @@ namespace MovieLibrary.Controllers
             var movies = GetMovies(URLs.Top100);
             //Changed the default ordering to DESCENDING, since the endpoint is called "TOP LIST", and a descending order is more logical for this name.
             movies = OrderMovies(orderByDescending, movies);
-            var listOfMovieTitles = GetListOfMovieTitles(movies);            
+            var listOfMovieTitles = GetListOfMovieTitles(movies);
+            if (listOfMovieTitles.Count == 0)
+                return new List<string> { "Got an empty list, something is wrong" };
             return listOfMovieTitles;
         }
 
@@ -39,18 +40,31 @@ namespace MovieLibrary.Controllers
         {
             var movies = GetMovies(URLs.Top100);
 
-            return movies.SingleOrDefault(movie => movie.Id == id);
+            try
+            {
+                return movies.SingleOrDefault(movie => movie.Id == id);
+            }
+            catch (Exception)
+            {
+                return new MovieWithNumericRating
+                {
+                    Id = "No such Movie",
+                    Rated = 99999999999,
+                    Title = "No such Movie"
+                };
+            }
         }
 
         #region Helper Methods
-        private List<Movie> GetMoviesUnmodified(string url) 
+
+        private List<Movie> GetMoviesUnmodified(string url)
         {
             var responseMessage = client.GetAsync(url).Result;
             var stream = responseMessage.Content.ReadAsStream();
             var streamReader = new StreamReader(stream);
             var listOfMovies = JsonSerializer.Deserialize<List<Movie>>
                 (streamReader.ReadToEnd());
-            
+
             return listOfMovies;
         }
 
@@ -79,7 +93,8 @@ namespace MovieLibrary.Controllers
             var convertedMovies = ConvertMovieRatingsToFloat(rawMovies);
             return convertedMovies;
         }
-        public  List<MovieWithNumericRating> OrderMovies(bool orderByDescending, List<MovieWithNumericRating> movies)
+
+        public List<MovieWithNumericRating> OrderMovies(bool orderByDescending, List<MovieWithNumericRating> movies)
         {
             if (!orderByDescending)
             {
@@ -94,6 +109,7 @@ namespace MovieLibrary.Controllers
 
             return movies;
         }
+
         private List<string> GetListOfMovieTitles(List<MovieWithNumericRating> movies)
         {
             var listOfMovieTitles = new List<string>();
@@ -103,6 +119,7 @@ namespace MovieLibrary.Controllers
             }
             return listOfMovieTitles;
         }
-        #endregion
+
+        #endregion Helper Methods
     }
 }
