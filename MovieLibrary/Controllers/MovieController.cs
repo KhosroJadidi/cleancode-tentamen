@@ -33,23 +33,14 @@ namespace MovieLibrary.Controllers
             return listOfMovieTitles;
         }
 
-        
+        [HttpGet]
+        [Route("/movie")]
+        public MovieWithNumericRating GetMovieById(string id)
+        {
+            var movies = GetMovies(URLs.Top100);
 
-
-
-        //[HttpGet]
-        //[Route("/movie")]
-        //public Movie GetMovieById(string id) 
-        //{
-        //    var movies = GetMovies();
-        //    foreach (var movie in movies) {
-        //        if (movie.Id.Equals((id)))
-        //        {
-        //            return movie; 
-        //        }
-        //    }
-        //    return null;
-        //}
+            return movies.SingleOrDefault(movie => movie.Id == id);
+        }
 
         #region Helper Methods
         private List<Movie> GetMoviesUnmodified(string url) 
